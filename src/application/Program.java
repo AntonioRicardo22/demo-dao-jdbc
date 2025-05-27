@@ -2,8 +2,13 @@ package application;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.Iterator;
+import java.util.List;
+
 import model.dao.DaoFactory;
+import model.dao.DepartmentDao;
 import model.dao.SellerDao;
+import model.dao.impl.sellerDaoJDBC;
 import model.entities.Department;
 import model.entities.Seller;
 
@@ -13,18 +18,27 @@ public class Program {
 		
 		SellerDao sellerDao = DaoFactory.createSellerDao();
 		
-		DateTimeFormatter fdate = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-		LocalDate date = LocalDate.parse("25/06/1995", fdate); 
+		System.out.println("====== TEST 1 : SELLER BYID ======");
+		System.out.println();
+		Seller seller = sellerDao.findById(4);
+		System.out.println(seller);
 		
-		Seller seller = new Seller(8, "heloisa ariel", "Helo.2024@gmail.com", date, 2.599,new Department(2,"Electronics") ); 
-				
-				//new Seller("Antonio ", "toin@gmail.xom", date, 3.500, new Department(2,"Electronics"),7);
+		System.out.println("====== TEST 2 : SELLER BY DEPARTMENT ======");
+		System.out.println();
+		Department department = new Department(2, null);
+		List<Seller> list = sellerDao.findByDepartment(department);
+		 for (Seller objSeller : list) {
+			 System.out.println(objSeller);
+		 }	 
+			 
+		System.out.println("====== TEST 3 : SELLER findAll ======");	 
+		System.out.println();
+		 List<Seller> listall = sellerDao.findAll();
+		 for (Seller seller2 : listall) {
+			 System.out.println(seller2);
+			 
+		 }
 		
-		//sellerDao.update(seller);
-		
-		System.out.println(sellerDao.findById(8));
-		//System.out.println(sellerDao2.findAll());
-		//System.out.println(seller);
 	}
 	
 

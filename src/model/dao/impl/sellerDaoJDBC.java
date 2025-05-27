@@ -6,8 +6,9 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
-
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import db.DB;
 import db.DbException;
@@ -27,8 +28,7 @@ public class sellerDaoJDBC implements SellerDao {
 	public void insert(Seller seller) {
 			String sql = "Insert into seller (name, email, birthDate,BaseSalary,departmentid) values (?,?,?,?,?) ";
 		try {
-				  connection = DB.getConnection();
-				 PreparedStatement pStatement = connection.prepareStatement(sql);
+				  PreparedStatement pStatement = connection.prepareStatement(sql);
 					 pStatement.setString(1, seller.getName());
 					 pStatement.setString(2, seller.getEmail());
 					 pStatement.setDate(3, java.sql.Date.valueOf(seller.getBirthLocalDate()));
@@ -39,7 +39,7 @@ public class sellerDaoJDBC implements SellerDao {
 				 System.out.println("Inserção bem sucedida! Linhas Afetadas: " + linhasAfetadas);
 				 
 				 DB.closePreparedStatement(pStatement);
-				 DB.closeConnection();
+				 
 				 
 			} catch (SQLException e) {
 				e.printStackTrace();
@@ -51,8 +51,7 @@ public class sellerDaoJDBC implements SellerDao {
 	public void update(Seller seller) {
 		String sql = "UPDATE seller SET name = ?, email = ?, birthDate = ?, BaseSalary = ?, departmentid = ? where id = ?";
 		
-		try {  connection = DB.getConnection();
-				
+		try { 
 				PreparedStatement pStatement = connection.prepareStatement(sql);
 				pStatement.setString(1, seller.getName());
 				pStatement.setString(2, seller.getEmail());
@@ -64,7 +63,7 @@ public class sellerDaoJDBC implements SellerDao {
 				int linhasAfetadas = pStatement.executeUpdate();
 		        System.out.println("Atualização concluída! Linhas afetadas: " + linhasAfetadas);
 		        DB.closePreparedStatement(pStatement);
-				DB.closeConnection();
+				
 			
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -74,7 +73,7 @@ public class sellerDaoJDBC implements SellerDao {
 	@Override
 	public void deletById(Integer id) {
 			String sql = "DELETE FROM seller  where id = ?";
-			try {  connection = DB.getConnection();
+			try { 
 				PreparedStatement pStatement = connection.prepareStatement(sql);
 				pStatement.setInt(1, id);
 				
@@ -83,7 +82,7 @@ public class sellerDaoJDBC implements SellerDao {
 			System.out.println("Exclusão concluída! Linhas afetadas: " + linhasAfetadas);
 	        
 	        DB.closePreparedStatement(pStatement);
-			DB.closeConnection();
+			
 			
 			} catch (SQLException e) {
 				e.printStackTrace();
@@ -92,25 +91,21 @@ public class sellerDaoJDBC implements SellerDao {
 
 	@Override
 	public Seller findById(Integer id) {
-		  connection = null;
 		 PreparedStatement pStatement =null;
 		 ResultSet resultSet = null;
-		 Seller seller = null;
-		 String sql = ("select * from seller s \r\n"
+		 String sql = ("select * ,d.Name AS DepName\r\n"
+		 		+ " from seller s \r\n"
 				+ "join department d on s.DepartmentId = d.id where s.Id = ? ");
 		try {
-			 connection = DB.getConnection();
+			
 			 pStatement = connection.prepareStatement(sql);
 			 pStatement.setInt(1, id);
 			 resultSet = pStatement.executeQuery();
 			
 			if (resultSet.next()) {
-				Department department = new Department(
-						resultSet.getInt("departmentid"), resultSet.getString("name"));
-						 seller = new Seller(resultSet.getInt("id"), resultSet.getString("name"), 
-								 resultSet.getString("email"),resultSet.getDate("birthDate").toLocalDate(),
-								 resultSet.getDouble("baseSalary"),department);
-						 return seller ;	 
+				 Department departmentQ = instantiateDepartment(resultSet);
+				 Seller obj = instantiateSeller(resultSet, departmentQ);
+					 return obj ;	 
 			}
 			return null;
 			
@@ -121,49 +116,115 @@ public class sellerDaoJDBC implements SellerDao {
 		finally {
 			  DB.closePreparedStatement(pStatement);
 			  DB.closeResultSet(resultSet);
-			  DB.closeConnection();
+			 
 		}
 	}
 
 	
 	@Override
-	public List<Seller> findAll() {
-		 List<Seller> list = new ArrayList<>();
-		 String sql = "SELECT \r\n"
-		 		+ "    seller.ID,\r\n"
-		 		+ "    seller.Name,\r\n"
-		 		+ "    seller.Email,\r\n"
-		 		+ "    seller.BirthDate,\r\n"
-		 		+ "    seller.BaseSalary,\r\n"
-		 		+ "    seller.DepartmentId,\r\n"
-		 		+ "    department.Name\r\n"
-		 		+ "FROM seller\r\n"
-		 		+ "INNER JOIN department ON seller.DepartmentId = department.Id;";
-		try {
-			  connection = DB.getConnection();
-			 
-			 PreparedStatement pStatement = connection.prepareStatement(sql);
-			 ResultSet resultSet = pStatement.executeQuery();
-			 
-			 while (resultSet.next()) {
-				 Department department = new Department(
-						 resultSet.getInt("departmentid"), resultSet.getString("department.Name"));
-				 
-				 Seller seller = new Seller(resultSet.getInt("id"), resultSet.getString("name"), 
-						 resultSet.getString("email"),resultSet.getDate("birthDate").toLocalDate(),
-						 resultSet.getDouble("baseSalary"),department);
-				 list.add(seller);
-				 
-			 }
-			 
-			 DB.closePreparedStatement(pStatement);
-			 DB.closeResultSet(resultSet);
-			 DB.closeConnection();
+	public List<Seller> findAll() { 
+		
+	 PreparedStatement pStatement =null;
+	 ResultSet resultSet = null;
+	
+	 String sql = ("SELECT seller.*,department.Name as DepName\r\n"
+	 		+ "FROM seller INNER JOIN department\r\n"
+	 		+ "ON seller.DepartmentId = department.Id\r\n"
+	 		+ "order by seller.Name; ");
+	try {
+		 pStatement = connection.prepareStatement(sql);
+		 resultSet = pStatement.executeQuery();
+		
+		 List<Seller> seller = new ArrayList<Seller>();
+		 Map<Integer, Department> map = new HashMap<Integer, Department>();
+		 
+		while (resultSet.next()) {
+			Department departmentQ = map.get(resultSet.getInt("DepartmentId"));
 			
-		}catch (SQLException e) {
-			throw new DbException(e.getMessage());
+			if (departmentQ == null) {
+			departmentQ = instantiateDepartment(resultSet);
+			map.put(resultSet.getInt("DepartmentId"), departmentQ);
+			}
+			
+			Seller obj  = instantiateSeller(resultSet, departmentQ);
+			seller.add(obj);
+			
 		}
-		return list;
+		return seller;
+		
+	}catch (SQLException e) {
+		throw new DbException(e.getMessage());
+	}
+	
+	finally {
+		  DB.closePreparedStatement(pStatement);
+		  DB.closeResultSet(resultSet);
+		 
+	}
+	}
+	
+	@Override
+	public List<Seller> findByDepartment(Department department) {
+			 PreparedStatement pStatement =null;
+			 ResultSet resultSet = null;
+			
+			 String sql = ("SELECT seller.*,department.Name as DepName \r\n"
+			 		+ "FROM seller INNER JOIN department\r\n"
+			 		+ "ON seller.DepartmentId = department.Id\r\n"
+			 		+ "WHERE DepartmentId = ? \r\n"
+			 		+ "order by seller.Name; ");
+			try {
+				 pStatement = connection.prepareStatement(sql);
+				 pStatement.setInt(1, department.getId());
+				 resultSet = pStatement.executeQuery();
+				
+				 List<Seller> seller = new ArrayList<Seller>();
+				 Map<Integer, Department> map = new HashMap<Integer, Department>();
+				 
+				while (resultSet.next()) {
+					Department departmentQ = map.get(resultSet.getInt("DepartmentId"));
+					
+					if (departmentQ == null) {
+					departmentQ = instantiateDepartment(resultSet);
+					map.put(resultSet.getInt("DepartmentId"), departmentQ);
+					}
+					
+					Seller obj  = instantiateSeller(resultSet, departmentQ);
+					seller.add(obj);
+					
+				}
+				return seller;
+				
+			}catch (SQLException e) {
+				throw new DbException(e.getMessage());
+			}
+			
+			finally {
+				  DB.closePreparedStatement(pStatement);
+				  DB.closeResultSet(resultSet);
+				  
+			}
+		}
+	
+	
+	private Seller instantiateSeller(ResultSet resultSet, Department department) throws SQLException {
+	   
+	    return new Seller(
+	        resultSet.getInt("id"), 
+	        resultSet.getString("name"), 
+	        resultSet.getString("email"), 
+	        resultSet.getDate("birthDate").toLocalDate(), 
+	        resultSet.getDouble("baseSalary"), 
+	        department
+	    );
+	}
+
+	private Department instantiateDepartment(ResultSet resultSet) throws SQLException {
+		   
+	    return new Department(
+	        resultSet.getInt("DepartmentId"),
+	        resultSet.getString("DepName")
+	       );
 	}
 
 }
