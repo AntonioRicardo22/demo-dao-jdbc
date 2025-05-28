@@ -14,6 +14,7 @@ public class Program {
 
 	public static void main(String[] args) {
 		
+		
 		LocalDate birthDate = new Date().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
 		
 		SellerDao sellerDao = DaoFactory.createSellerDao();
@@ -31,14 +32,14 @@ public class Program {
 			 System.out.println(objSeller);
 		 }	 
 			 
-		System.out.println("====== TEST 3 : SELLER findAll ======");	 
+		System.out.println("====== TEST 3 : SELLER FINDALL ======");	 
 		System.out.println();
 		 List<Seller> listall = sellerDao.findAll();
 		 for (Seller seller2 : listall) {
 			 System.out.println(seller2);
 			 
 		 }
-		 System.out.println("====== TEST 4 : SELLER insert ======");	 
+		 System.out.println("====== TEST 4 : SELLER INSERT ======");	 
 		 
 		Seller newSeller = new Seller(null, "greg", "greg@gmail.com", birthDate,4000.00,department);
 		sellerDao.insert(newSeller);
@@ -50,6 +51,8 @@ public class Program {
 		 seller.setName("marta Waine");
 		 sellerDao.update(seller);
 		 
+		 System.out.println("====== TEST 6 : SELLER DELETE ======");
+		  sellerDao.deletById(16);
 	}
 	
 
