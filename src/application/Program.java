@@ -52,7 +52,7 @@ public class Program {
 		 sellerDao.update(seller);
 		 
 		 System.out.println("====== TEST 6 : SELLER DELETE ======");
-		  sellerDao.deletById(16);
+		  sellerDao.deletById(18);
 	}
 	
 

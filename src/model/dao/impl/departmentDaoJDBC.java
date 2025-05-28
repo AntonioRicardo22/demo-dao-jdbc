@@ -6,6 +6,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+
+import db.DbException;
 import model.dao.DepartmentDao;
 import model.entities.Department;
 
@@ -65,11 +67,16 @@ public class departmentDaoJDBC implements DepartmentDao{
 			 pStatement.setInt(1, id);
 		
 		int linhasAfetadas = pStatement.executeUpdate();
-        System.out.println("Exclusão concluída! Linhas afetadas: " + linhasAfetadas);
-       
+		if (linhasAfetadas > 0) {
+            System.out.println("Exclusão concluída! Linhas afetadas: " + linhasAfetadas);
+        } else {
+            System.out.println("Nenhuma linha foi afetada. O ID pode não existir.");
+        }
+
 		} catch (SQLException e) {
-			e.printStackTrace();
-		}
+	        throw new DbException("Erro ao deletar departamento: " + e.getMessage());
+	    }
+
 	}
 
 	@Override
