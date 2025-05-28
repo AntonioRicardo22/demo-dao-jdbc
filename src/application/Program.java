@@ -1,20 +1,20 @@
 package application;
 
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-import java.util.Iterator;
+import java.time.ZoneId;
+import java.util.Date;
 import java.util.List;
 
 import model.dao.DaoFactory;
-import model.dao.DepartmentDao;
 import model.dao.SellerDao;
-import model.dao.impl.sellerDaoJDBC;
 import model.entities.Department;
 import model.entities.Seller;
 
 public class Program {
 
 	public static void main(String[] args) {
+		
+		LocalDate birthDate = new Date().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
 		
 		SellerDao sellerDao = DaoFactory.createSellerDao();
 		
@@ -38,7 +38,11 @@ public class Program {
 			 System.out.println(seller2);
 			 
 		 }
-		
+		 System.out.println("====== TEST 4 : SELLER insert ======");	 
+		 
+		Seller newSeller = new Seller(null, "greg", "greg@gmail.com", birthDate,4000.00,department);
+		sellerDao.insert(newSeller);
+		System.out.println("Inserted! new id = "+ newSeller.getId());
 	}
 	
 

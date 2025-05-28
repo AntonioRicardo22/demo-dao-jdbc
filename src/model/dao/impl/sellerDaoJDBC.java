@@ -27,8 +27,9 @@ public class sellerDaoJDBC implements SellerDao {
 	@Override
 	public void insert(Seller seller) {
 			String sql = "Insert into seller (name, email, birthDate,BaseSalary,departmentid) values (?,?,?,?,?) ";
-		try {
-				  PreparedStatement pStatement = connection.prepareStatement(sql);
+					 
+			 try (PreparedStatement pStatement = connection.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS))  {
+				  
 					 pStatement.setString(1, seller.getName());
 					 pStatement.setString(2, seller.getEmail());
 					 pStatement.setDate(3, java.sql.Date.valueOf(seller.getBirthLocalDate()));
@@ -36,15 +37,27 @@ public class sellerDaoJDBC implements SellerDao {
 					 pStatement.setInt(5, seller.getDepartment().getId());
 				 
 				 int linhasAfetadas = pStatement.executeUpdate();
-				 System.out.println("Inserção bem sucedida! Linhas Afetadas: " + linhasAfetadas);
 				 
-				 DB.closePreparedStatement(pStatement);
+				 if (linhasAfetadas > 0) {
+					 ResultSet rs = pStatement.getGeneratedKeys();
+					 if (rs.next()) {
+						int id = rs.getInt(1);
+						seller.setId(id);
+					}
+					 
+					 System.out.println("Inserção bem sucedida! Linhas Afetadas: " + linhasAfetadas);
+				}
 				 
+				 else {
+					throw new DbException("Unexpected error! no rows afected!");
+				}
 				 
 			} catch (SQLException e) {
 				e.printStackTrace();
 			}
+		finally {
 		
+		}
 	}
 
 	@Override
