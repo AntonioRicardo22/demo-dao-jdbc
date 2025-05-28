@@ -62,25 +62,29 @@ public class sellerDaoJDBC implements SellerDao {
 
 	@Override
 	public void update(Seller seller) {
-		String sql = "UPDATE seller SET name = ?, email = ?, birthDate = ?, BaseSalary = ?, departmentid = ? where id = ?";
-		
-		try { 
-				PreparedStatement pStatement = connection.prepareStatement(sql);
-				pStatement.setString(1, seller.getName());
-				pStatement.setString(2, seller.getEmail());
-				pStatement.setDate(3, java.sql.Date.valueOf( seller.getBirthLocalDate()));
-				pStatement.setDouble(4, seller.getBaseSalary());
-				pStatement.setInt(5, seller.getDepartment().getId());
-				pStatement.setInt(6, seller.getId());
-				
-				int linhasAfetadas = pStatement.executeUpdate();
-		        System.out.println("Atualização concluída! Linhas afetadas: " + linhasAfetadas);
-		        DB.closePreparedStatement(pStatement);
-				
+		String sql = "UPDATE seller SET name = ?, email = ?, birthDate = ?, BaseSalary = ?, departmentid = ? WHERE ID = ?";
+		 
+		 try (PreparedStatement pStatement = connection.prepareStatement(sql)) {
+			  
+				 pStatement.setString(1, seller.getName());
+				 pStatement.setString(2, seller.getEmail());
+				 pStatement.setDate(3, java.sql.Date.valueOf(seller.getBirthLocalDate()));
+				 pStatement.setDouble(4, seller.getBaseSalary());
+				 pStatement.setInt(5, seller.getDepartment().getId());
+				 pStatement.setInt(6, seller.getId());
+			 
+			 int linhasAfetadas = pStatement.executeUpdate();
+			 
 			
+				 
+				 System.out.println("Inserção bem sucedida! Linhas Afetadas: " + linhasAfetadas);
+			
+			 
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
+	finally {	
+	 }
 	}
 
 	@Override
