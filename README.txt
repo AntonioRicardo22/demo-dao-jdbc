@@ -20,8 +20,4 @@ Este projeto é uma aplicação Java que implementa um CRUD completo para gerenc
 
 O projeto utiliza MySQL. O script para criação do banco está na pasta `src/db/database.sql`.
 
-▶️ Como executar
 
-1. Clone o repositório:
-   ```bash
-   git clone https://github.com/toninh
